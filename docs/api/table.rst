@@ -80,6 +80,7 @@ Advanced processing
     agate.Table.normalize
     agate.Table.pivot
     agate.Table.rename
+    agate.Table.resample
 
 Previewing
 ----------
