@@ -79,7 +79,9 @@ Advanced processing
     agate.Table.merge
     agate.Table.normalize
     agate.Table.pivot
+    agate.Table.pivot_measures
     agate.Table.rename
+    agate.PivotResult
 
 Previewing
 ----------

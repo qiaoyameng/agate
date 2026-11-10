@@ -1,6 +1,7 @@
 1.14.3 - Unreleased
 -------------------
 
+- feat: :meth:`.Table.pivot_measures` pivots a table around multiple named :class:`.Aggregation` measures at once. Each measure keeps its own :class:`.DataType`, missing row/pivot combinations use per-measure default values, an explicit ``pivot_domain`` stabilizes the columns for empty input, and the returned :class:`.PivotResult` exports a mapping from unique column names to their original ``(pivot value, measure name)`` identities.
 - feat: :class:`.Median`, :class:`.Percentiles`, :class:`.Quartiles`, :class:`.Quintiles`, :class:`.Deciles` and :class:`.IQR` can be applied to :class:`.TimeDelta` columns, like :class:`.Sum` and :class:`.Mean`.
 - fix: :meth:`.Table.distinct` now deduplicates rows when ``key`` is a sequence of column names.
 - fix: :class:`.Rank` ranks null values last when ``reverse=True``.

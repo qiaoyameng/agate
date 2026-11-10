@@ -321,6 +321,7 @@ from agate.table.merge import merge
 from agate.table.normalize import normalize
 from agate.table.order_by import order_by
 from agate.table.pivot import pivot
+from agate.table.pivot_measures import PivotResult, pivot_measures
 from agate.table.print_bars import print_bars
 from agate.table.print_html import print_html
 from agate.table.print_structure import print_structure
@@ -354,6 +355,7 @@ Table.merge = merge
 Table.normalize = normalize
 Table.order_by = order_by
 Table.pivot = pivot
+Table.pivot_measures = pivot_measures
 Table.print_bars = print_bars
 Table.print_html = print_html
 Table.print_structure = print_structure
