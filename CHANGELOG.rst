@@ -1,6 +1,8 @@
 1.14.3 - Unreleased
 -------------------
 
+- feat: :class:`.KeyStrategy` provides typed, address-independent key identity for :meth:`.Table.distinct`, :meth:`.Table.group_by` and :meth:`.Table.join` (including composite keys). Pass it as the new ``key_strategy`` argument. Booleans and numbers occupy separate key spaces, finite :class:`decimal.Decimal` values match by numeric value, NaN collapses into a single missing class, :code:`None` can be configured to match or never match (SQL-style nulls), strings are never coerced to numbers, and dates and datetimes are never coerced into one another. Unsupported mutable values and custom :class:`.DataType` columns require an explicit stable-key adapter.
+- feat: :meth:`.Table.group_by` accepts a sequence of column names as a composite key.
 - feat: :class:`.Median`, :class:`.Percentiles`, :class:`.Quartiles`, :class:`.Quintiles`, :class:`.Deciles` and :class:`.IQR` can be applied to :class:`.TimeDelta` columns, like :class:`.Sum` and :class:`.Mean`.
 - fix: :meth:`.Table.distinct` now deduplicates rows when ``key`` is a sequence of column names.
 - fix: :class:`.Rank` ranks null values last when ``reverse=True``.

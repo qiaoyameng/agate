@@ -37,3 +37,11 @@ class FieldSizeLimitError(Exception):  # pragma: no cover
             'CSV contains a field longer than the maximum length of %i characters on line %i. Try raising the maximum '
             'with the field_size_limit parameter, or try setting quoting=csv.QUOTE_NONE.' % (limit, line_number)
         )
+
+
+class KeyStrategyError(TypeError):
+    """
+    A :class:`.KeyStrategy` can not build a stable key for a value, or two
+    join columns have incompatible key types.
+    """
+    pass

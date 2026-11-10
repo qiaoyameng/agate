@@ -5,6 +5,7 @@ from agate.computations import *
 from agate.config import get_option, set_option, set_options
 from agate.data_types import *
 from agate.exceptions import *
+from agate.keying import KeyStrategy
 # import agate.fixed as fixed
 from agate.mapped_sequence import MappedSequence
 from agate.rows import Row

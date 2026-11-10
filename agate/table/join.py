@@ -3,7 +3,7 @@ from agate.rows import Row
 
 
 def join(self, right_table, left_key=None, right_key=None, inner=False, full_outer=False, require_match=False,
-         columns=None):
+         columns=None, key_strategy=None):
     """
     Create a new table by joining two table's on common values. This method
     implements most varieties of SQL join, in addition to some unique features.
@@ -70,6 +70,11 @@ def join(self, right_table, left_key=None, right_key=None, inner=False, full_out
         A sequence of column names from :code:`right_table` to include in
         the final output table. Defaults to all columns not in
         :code:`right_key`. Ignored when :code:`full_outer` is :code:`True`.
+    :param key_strategy:
+        An optional :class:`.KeyStrategy` that supplies typed,
+        address-independent key identity (including :code:`None` and NaN
+        handling). When omitted, keys are matched using their native Python
+        equality, preserving the historical behavior.
     :returns:
         A new :class:`.Table`.
     """
@@ -119,6 +124,23 @@ def join(self, right_table, left_key=None, right_key=None, inner=False, full_out
         right_data = right_column.values()
         right_key_indices = [right_column.index]
 
+    # With a typed strategy, verify the key spaces are compatible before any
+    # matching is attempted. Function and row-number joins have no column
+    # types to compare, so they are skipped.
+    if key_strategy is not None and left_key is not None and not left_key_is_func and not right_key_is_func:
+        if left_key_is_sequence:
+            checked_left_columns = left_columns
+        else:
+            checked_left_columns = [self._columns[left_key]]
+
+        if right_key_is_sequence:
+            checked_right_columns = right_columns
+        else:
+            checked_right_columns = [right_table._columns[right_key]]
+
+        for left_column, right_column in zip(checked_left_columns, checked_right_columns):
+            key_strategy.check_join_compatibility(left_column, right_column)
+
     # Build names and type lists
     column_names = list(self._column_names)
     column_types = list(self._column_types)
@@ -143,13 +165,21 @@ def join(self, right_table, left_key=None, right_key=None, inner=False, full_out
     if columns is not None and not full_outer:
         right_table = right_table.select([n for n in right_table._column_names if n in columns])
 
+    def token(value, is_sequence):
+        if key_strategy is None:
+            return value
+        if is_sequence:
+            return key_strategy.encode_composite(value)
+        return key_strategy.encode(value)
+
     right_hash = {}
 
     for i, value in enumerate(right_data):
-        if value not in right_hash:
-            right_hash[value] = []
+        right_token = token(value, right_key_is_sequence)
+        if right_token not in right_hash:
+            right_hash[right_token] = []
 
-        right_hash[value].append(right_table._rows[i])
+        right_hash[right_token].append(right_table._rows[i])
 
     # Collect new rows
     rows = []
@@ -161,7 +191,7 @@ def join(self, right_table, left_key=None, right_key=None, inner=False, full_out
 
     # Iterate over left column
     for left_index, left_value in enumerate(left_data):
-        matching_rows = right_hash.get(left_value, None)
+        matching_rows = right_hash.get(token(left_value, left_key_is_sequence), None)
 
         if require_match and matching_rows is None:
             raise ValueError('Left key "%s" does not have a matching right key.' % (left_value,))
@@ -198,10 +228,10 @@ def join(self, right_table, left_key=None, right_key=None, inner=False, full_out
 
     # Full outer join
     if full_outer:
-        left_set = set(left_data)
+        left_set = {token(value, left_key_is_sequence) for value in left_data}
 
         for right_index, right_value in enumerate(right_data):
-            if right_value in left_set:
+            if token(right_value, right_key_is_sequence) in left_set:
                 continue
 
             new_row = ([None] * len(self._columns)) + list(right_table.rows[right_index])
