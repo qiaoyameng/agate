@@ -12,5 +12,6 @@ from agate.table import Table
 from agate.tableset import TableSet
 from agate.testcase import AgateTestCase
 from agate.type_tester import TypeTester
+from agate.units import *
 from agate.utils import *
 from agate.warns import DuplicateColumnWarning, NullCalculationWarning, warn_duplicate_column, warn_null_calculation

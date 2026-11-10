@@ -1,4 +1,5 @@
 from agate.aggregations.base import Aggregation
+from agate.units import get_unit
 
 
 class Summary(Aggregation):
@@ -15,15 +16,22 @@ class Summary(Aggregation):
         If :code:`True`, each return value will be cast to the specified
         :code:`data_type` to ensure it is valid. Only disable this if you are
         certain your summary always returns the correct type.
+    :param unit:
+        An optional :class:`.Unit` describing the result. If omitted the
+        output has no unit, even when summarizing a unitized column.
     """
-    def __init__(self, column_name, data_type, func, cast=True):
+    def __init__(self, column_name, data_type, func, cast=True, unit=None):
         self._column_name = column_name
         self._data_type = data_type
         self._func = func
         self._cast = cast
+        self._unit = get_unit(unit)
 
     def get_aggregate_data_type(self, table):
         return self._data_type
+
+    def get_aggregate_unit(self, table):
+        return self._unit
 
     def run(self, table):
         v = self._func(table.columns[self._column_name])

@@ -38,7 +38,12 @@ class Variance(Aggregation):
 
         data = column.values_without_nulls()
         if data:
-            mean = self._mean.run(table)
+            if column.unit is not None:
+                data = tuple(column.unit.to_reference(n) for n in data)
+                mean = sum(data, 0) / len(data)
+            else:
+                mean = self._mean.run(table)
+
             return sum((n - mean) ** 2 for n in data) / (len(data) - 1)
 
 
@@ -74,5 +79,10 @@ class PopulationVariance(Variance):
 
         data = column.values_without_nulls()
         if data:
-            mean = self._mean.run(table)
+            if column.unit is not None:
+                data = tuple(column.unit.to_reference(n) for n in data)
+                mean = sum(data, 0) / len(data)
+            else:
+                mean = self._mean.run(table)
+
             return sum((n - mean) ** 2 for n in data) / len(data)

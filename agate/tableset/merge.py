@@ -32,9 +32,11 @@ def merge(self, groups=None, group_name=None, group_type=None):
 
     column_names = list(self._column_names)
     column_types = list(self._column_types)
+    column_units = list(self._sample_table.column_units)
 
     column_names.insert(0, group_name if group_name else self._key_name)
     column_types.insert(0, group_type if group_type else self._key_type)
+    column_units.insert(0, None)
 
     rows = []
 
@@ -45,4 +47,4 @@ def merge(self, groups=None, group_name=None, group_type=None):
             else:
                 rows.append(Row((groups[index],) + tuple(row), column_names))
 
-    return Table(rows, column_names, column_types)
+    return Table(rows, column_names, column_types, column_units=column_units)

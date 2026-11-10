@@ -2,7 +2,7 @@ from agate import utils
 
 
 @classmethod
-def from_object(cls, obj, row_names=None, column_types=None):
+def from_object(cls, obj, row_names=None, column_types=None, column_units=None):
     """
     Create a new table from a Python object.
 
@@ -90,4 +90,4 @@ def from_object(cls, obj, row_names=None, column_types=None):
 
         rows.append(r)
 
-    return Table(rows, column_names, row_names=row_names, column_types=column_types)
+    return Table(rows, column_names, row_names=row_names, column_types=column_types, column_units=column_units)

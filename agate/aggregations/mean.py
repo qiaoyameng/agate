@@ -3,6 +3,7 @@ from agate.aggregations.has_nulls import HasNulls
 from agate.aggregations.sum import Sum
 from agate.data_types import Number, TimeDelta
 from agate.exceptions import DataTypeError
+from agate.units import reference_unit
 from agate.warns import warn_null_calculation
 
 
@@ -23,6 +24,14 @@ class Mean(Aggregation):
         if isinstance(column.data_type, (Number, TimeDelta)):
             return column.data_type
 
+    def get_aggregate_unit(self, table):
+        column = table.columns[self._column_name]
+
+        if isinstance(column.data_type, Number) and column.unit is not None:
+            return reference_unit(column.unit)
+
+        return None
+
     def validate(self, table):
         column = table.columns[self._column_name]
 
@@ -38,5 +47,11 @@ class Mean(Aggregation):
         column = table.columns[self._column_name]
         data = column.values_without_nulls()
         if data:
+            if isinstance(column.data_type, Number) and column.unit is not None:
+                target = reference_unit(column.unit)
+                sum_total = sum((column.unit.to_reference(value) for value in data), 0)
+
+                return target.from_reference(sum_total / len(data))
+
             sum_total = self._sum.run(table)
             return sum_total / len(data)

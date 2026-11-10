@@ -4,7 +4,8 @@ from decimal import Decimal
 
 
 @classmethod
-def from_json(cls, path, row_names=None, key=None, newline=False, column_types=None, encoding='utf-8', **kwargs):
+def from_json(cls, path, row_names=None, key=None, newline=False, column_types=None, encoding='utf-8',
+              column_units=None, **kwargs):
     """
     Create a new table from a JSON file.
 
@@ -74,4 +75,4 @@ def from_json(cls, path, row_names=None, key=None, newline=False, column_types=N
         if close:
             f.close()
 
-    return Table.from_object(js, row_names=row_names, column_types=column_types)
+    return Table.from_object(js, row_names=row_names, column_types=column_types, column_units=column_units)

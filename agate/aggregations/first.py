@@ -22,6 +22,9 @@ class First(Aggregation):
     def get_aggregate_data_type(self, table):
         return table.columns[self._column_name].data_type
 
+    def get_aggregate_unit(self, table):
+        return table.columns[self._column_name].unit
+
     def validate(self, table):
         column = table.columns[self._column_name]
         data = column.values()

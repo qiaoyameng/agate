@@ -23,6 +23,17 @@ class Computation:  # pragma: no cover
         """
         raise NotImplementedError()
 
+    def get_computed_unit(self, table):
+        """
+        Return the :class:`.Unit` of the computed column, or :code:`None`.
+
+        The default implementation returns :code:`None`: a custom computation
+        does not inherit the unit of its input columns. Override this method,
+        or pass an explicit unit to a built-in computation, to attach a unit
+        to the result.
+        """
+        return None
+
     def validate(self, table):
         """
         Perform any checks necessary to verify this computation can run on the

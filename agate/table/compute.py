@@ -20,9 +20,11 @@ def compute(self, computations, replace=False):
     """
     column_names = list(copy(self._column_names))
     column_types = list(copy(self._column_types))
+    column_units = list(copy(self._column_units))
 
     for new_column_name, computation in computations:
         new_column_type = computation.get_computed_data_type(self)
+        new_column_unit = computation.get_computed_unit(self)
 
         if new_column_name in column_names:
             if not replace:
@@ -32,9 +34,11 @@ def compute(self, computations, replace=False):
 
             i = column_names.index(new_column_name)
             column_types[i] = new_column_type
+            column_units[i] = new_column_unit
         else:
             column_names.append(new_column_name)
             column_types.append(new_column_type)
+            column_units.append(new_column_unit)
 
         computation.validate(self)
 
@@ -61,4 +65,4 @@ def compute(self, computations, replace=False):
 
         new_rows.append(Row(values, column_names))
 
-    return self._fork(new_rows, column_names, column_types)
+    return self._fork(new_rows, column_names, column_types, column_units=column_units)

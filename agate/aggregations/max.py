@@ -22,6 +22,9 @@ class Max(Aggregation):
         if isinstance(column.data_type, (Date, DateTime, Number, TimeDelta)):
             return column.data_type
 
+    def get_aggregate_unit(self, table):
+        return table.columns[self._column_name].unit
+
     def validate(self, table):
         column = table.columns[self._column_name]
 

@@ -1,8 +1,11 @@
+import math
+
 from agate.aggregations.base import Aggregation
 from agate.aggregations.has_nulls import HasNulls
 from agate.aggregations.percentiles import Percentiles
 from agate.data_types import Number, TimeDelta
 from agate.exceptions import DataTypeError
+from agate.units import reference_unit
 from agate.warns import warn_null_calculation
 
 
@@ -23,6 +26,14 @@ class IQR(Aggregation):
         if isinstance(column.data_type, (Number, TimeDelta)):
             return column.data_type
 
+    def get_aggregate_unit(self, table):
+        column = table.columns[self._column_name]
+
+        if isinstance(column.data_type, Number) and column.unit is not None:
+            return reference_unit(column.unit.delta_unit())
+
+        return None
+
     def validate(self, table):
         column = table.columns[self._column_name]
 
@@ -35,6 +46,23 @@ class IQR(Aggregation):
             warn_null_calculation(self, column)
 
     def run(self, table):
+        column = table.columns[self._column_name]
+
+        if isinstance(column.data_type, Number) and column.unit is not None:
+            values = tuple(column.unit.to_reference(v) for v in column.values_without_nulls_sorted())
+
+            def percentile(p):
+                k = len(values) * (float(p) / 100)
+                low = max(1, int(math.ceil(k)))
+                high = min(len(values), int(math.floor(k + 1)))
+
+                if low == high:
+                    return values[low - 1]
+
+                return (values[low - 1] + values[high - 1]) / 2
+
+            return percentile(75) - percentile(25)
+
         percentiles = self._percentiles.run(table)
 
         if percentiles[75] is not None and percentiles[25] is not None:

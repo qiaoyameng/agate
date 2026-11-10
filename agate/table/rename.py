@@ -1,4 +1,5 @@
 from agate import utils
+from agate.rows import Row
 
 
 def rename(self, column_names=None, row_names=None, slug_columns=False, slug_rows=False, **kwargs):
@@ -53,6 +54,13 @@ def rename(self, column_names=None, row_names=None, slug_columns=False, slug_row
         if row_names is None:
             row_names = self._row_names
 
-        return Table(self._rows, column_names, self._column_types, row_names=row_names, _is_fork=False)
+        new_rows = [Row(row.values(), column_names) for row in self._rows]
 
-    return self._fork(self._rows, column_names, self._column_types, row_names=row_names)
+        return Table(new_rows, column_names, self._column_types, row_names=row_names, _is_fork=True,
+                     column_units=self._column_units)
+
+    if column_names is None:
+        column_names = self._column_names
+
+    return self._fork(self._rows, column_names, self._column_types, row_names=row_names,
+                      column_units=self._column_units)

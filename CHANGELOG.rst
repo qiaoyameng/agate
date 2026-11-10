@@ -1,6 +1,7 @@
 1.14.3 - Unreleased
 -------------------
 
+- feat: :class:`.Number` columns can carry optional :class:`.Unit` metadata. Built-in units cover meters/centimeters, seconds/milliseconds, kelvin/degrees Celsius and offset-free temperature differences. Conversion scale and offset are stored as :class:`decimal.Decimal`. Units propagate through :meth:`.Table.select`, :meth:`.Table.rename`, :meth:`.Table.join`, :meth:`.Table.compute` and :meth:`.Table.merge`; :meth:`.Table.convert` performs explicit conversion. :class:`.Change` converts same-dimension values first and rejects cross-dimension operations, :class:`.Mean` accepts absolute temperatures while :class:`.Sum` rejects them, and custom computations/aggregations must declare an output unit or return an undetermined one.
 - feat: :class:`.Median`, :class:`.Percentiles`, :class:`.Quartiles`, :class:`.Quintiles`, :class:`.Deciles` and :class:`.IQR` can be applied to :class:`.TimeDelta` columns, like :class:`.Sum` and :class:`.Mean`.
 - fix: :meth:`.Table.distinct` now deduplicates rows when ``key`` is a sequence of column names.
 - fix: :class:`.Rank` ranks null values last when ``reverse=True``.

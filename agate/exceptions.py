@@ -37,3 +37,15 @@ class FieldSizeLimitError(Exception):  # pragma: no cover
             'CSV contains a field longer than the maximum length of %i characters on line %i. Try raising the maximum '
             'with the field_size_limit parameter, or try setting quoting=csv.QUOTE_NONE.' % (limit, line_number)
         )
+
+
+class UnitError(DataTypeError):
+    """
+    An operation was attempted between values whose :class:`.Unit`
+    definitions are incompatible.
+
+    This is raised, for example, when subtracting a length column from a
+    temperature column, or when attempting to sum an absolute temperature
+    column.
+    """
+    pass

@@ -3,7 +3,7 @@ from agate import fixed, utils
 
 @classmethod
 def from_fixed(cls, path, schema_path, column_names=utils.default, column_types=None, row_names=None, encoding='utf-8',
-               schema_encoding='utf-8'):
+               schema_encoding='utf-8', column_units=None):
     """
     Create a new table from a fixed-width file and a CSV schema.
 
@@ -62,4 +62,4 @@ def from_fixed(cls, path, schema_path, column_names=utils.default, column_types=
     if column_names == utils.default:
         column_names = reader.fieldnames
 
-    return Table(rows, column_names, column_types, row_names=row_names)
+    return Table(rows, column_names, column_types, row_names=row_names, column_units=column_units)

@@ -3,6 +3,7 @@ from agate.aggregations.has_nulls import HasNulls
 from agate.aggregations.variance import PopulationVariance, Variance
 from agate.data_types import Number
 from agate.exceptions import DataTypeError
+from agate.units import reference_unit
 from agate.warns import warn_null_calculation
 
 
@@ -22,6 +23,14 @@ class StDev(Aggregation):
     def get_aggregate_data_type(self, table):
         return Number()
 
+    def get_aggregate_unit(self, table):
+        column = table.columns[self._column_name]
+
+        if column.unit is not None:
+            return reference_unit(column.unit.delta_unit())
+
+        return None
+
     def validate(self, table):
         column = table.columns[self._column_name]
 
@@ -36,7 +45,15 @@ class StDev(Aggregation):
     def run(self, table):
         variance = self._variance.run(table)
         if variance is not None:
-            return variance.sqrt()
+            result = variance.sqrt()
+            column = table.columns[self._column_name]
+
+            if column.unit is not None:
+                target = reference_unit(column.unit.delta_unit())
+
+                return target.from_reference(result)
+
+            return result
 
 
 class PopulationStDev(StDev):
@@ -55,6 +72,14 @@ class PopulationStDev(StDev):
     def get_aggregate_data_type(self, table):
         return Number()
 
+    def get_aggregate_unit(self, table):
+        column = table.columns[self._column_name]
+
+        if column.unit is not None:
+            return reference_unit(column.unit.delta_unit())
+
+        return None
+
     def validate(self, table):
         column = table.columns[self._column_name]
 
@@ -69,4 +94,12 @@ class PopulationStDev(StDev):
     def run(self, table):
         variance = self._population_variance.run(table)
         if variance is not None:
-            return variance.sqrt()
+            result = variance.sqrt()
+            column = table.columns[self._column_name]
+
+            if column.unit is not None:
+                target = reference_unit(column.unit.delta_unit())
+
+                return target.from_reference(result)
+
+            return result

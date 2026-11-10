@@ -13,7 +13,9 @@ def _aggregate(self, aggregations=[]):
     # Process nested TableSet's
     if isinstance(self._values[0], TableSet):
         for key, nested_tableset in self.items():
-            column_names, column_types, nested_output, row_name_columns = _aggregate(nested_tableset, aggregations)
+            column_names, column_types, column_units, nested_output, row_name_columns = _aggregate(
+                nested_tableset, aggregations
+            )
 
             for row in nested_output:
                 row.insert(0, key)
@@ -22,16 +24,19 @@ def _aggregate(self, aggregations=[]):
 
         column_names.insert(0, self._key_name)
         column_types.insert(0, self._key_type)
+        column_units.insert(0, None)
         row_name_columns.insert(0, self._key_name)
     # Regular Tables
     else:
         column_names = [self._key_name]
         column_types = [self._key_type]
+        column_units = [None]
         row_name_columns = [self._key_name]
 
         for new_column_name, aggregation in aggregations:
             column_names.append(new_column_name)
             column_types.append(aggregation.get_aggregate_data_type(self._sample_table))
+            column_units.append(aggregation.get_aggregate_unit(self._sample_table))
 
         for name, table in self.items():
             for new_column_name, aggregation in aggregations:
@@ -45,7 +50,7 @@ def _aggregate(self, aggregations=[]):
 
             output.append(new_row)
 
-    return column_names, column_types, output, row_name_columns
+    return column_names, column_types, column_units, output, row_name_columns
 
 
 def aggregate(self, aggregations):
@@ -67,7 +72,7 @@ def aggregate(self, aggregations):
     :returns:
         A new :class:`.Table`.
     """
-    column_names, column_types, output, row_name_columns = _aggregate(self, aggregations)
+    column_names, column_types, column_units, output, row_name_columns = _aggregate(self, aggregations)
 
     if len(row_name_columns) == 1:
         row_names = row_name_columns[0]
@@ -75,4 +80,4 @@ def aggregate(self, aggregations):
         def row_names(r):
             return tuple(r[n] for n in row_name_columns)
 
-    return Table(output, column_names, column_types, row_names=row_names)
+    return Table(output, column_names, column_types, row_names=row_names, column_units=column_units)

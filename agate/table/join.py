@@ -122,6 +122,7 @@ def join(self, right_table, left_key=None, right_key=None, inner=False, full_out
     # Build names and type lists
     column_names = list(self._column_names)
     column_types = list(self._column_types)
+    column_units = list(self._column_units)
 
     for i, column in enumerate(right_table._columns):
         name = column.name
@@ -139,6 +140,7 @@ def join(self, right_table, left_key=None, right_key=None, inner=False, full_out
             column_names.append(name)
 
         column_types.append(column.data_type)
+        column_units.append(column.unit)
 
     if columns is not None and not full_outer:
         right_table = right_table.select([n for n in right_table._column_names if n in columns])
@@ -208,4 +210,4 @@ def join(self, right_table, left_key=None, right_key=None, inner=False, full_out
 
             rows.append(Row(new_row, column_names))
 
-    return self._fork(rows, column_names, column_types, row_names=row_names)
+    return self._fork(rows, column_names, column_types, row_names=row_names, column_units=column_units)

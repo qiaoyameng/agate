@@ -1,4 +1,5 @@
 from agate.computations.base import Computation
+from agate.units import get_unit
 
 
 class Formula(Computation):
@@ -14,14 +15,22 @@ class Formula(Computation):
         If :code:`True`, each return value will be cast to the specified
         :code:`data_type` to ensure it is valid. Only disable this if you are
         certain your formula always returns the correct type.
+    :param unit:
+        An optional :class:`.Unit` describing the values the formula
+        produces. If omitted the computed column has no unit, even when the
+        formula reads a unitized column.
     """
-    def __init__(self, data_type, func, cast=True):
+    def __init__(self, data_type, func, cast=True, unit=None):
         self._data_type = data_type
         self._func = func
         self._cast = cast
+        self._unit = get_unit(unit)
 
     def get_computed_data_type(self, table):
         return self._data_type
+
+    def get_computed_unit(self, table):
+        return self._unit
 
     def run(self, table):
         new_column = []

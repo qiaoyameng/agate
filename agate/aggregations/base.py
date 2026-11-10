@@ -31,6 +31,16 @@ class Aggregation:  # pragma: no cover
         """
         raise UnsupportedAggregationError()
 
+    def get_aggregate_unit(self, table):
+        """
+        Return the :class:`.Unit` of the aggregated value, or :code:`None`.
+
+        The default implementation returns :code:`None`: a custom aggregation
+        does not implicitly inherit the unit of its input column. Override
+        this method to declare an explicit output unit.
+        """
+        return None
+
     def validate(self, table):
         """
         Perform any checks necessary to verify this aggregation can run on the

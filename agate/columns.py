@@ -6,6 +6,7 @@ the parent (column name, data type) as well as the rows that contain their data.
 """
 
 from agate.mapped_sequence import MappedSequence
+from agate.exceptions import UnitError
 from agate.utils import NullOrder, memoize
 
 
@@ -39,12 +40,13 @@ class Column(MappedSequence):
     :param row_names:
         An optional list of row names (keys) for this column.
     """
-    __slots__ = ['_index', '_name', '_data_type', '_rows', '_row_names']
+    __slots__ = ['_index', '_name', '_data_type', '_unit', '_rows', '_row_names']
 
-    def __init__(self, index, name, data_type, rows, row_names=None):
+    def __init__(self, index, name, data_type, rows, row_names=None, unit=None):
         self._index = index
         self._name = name
         self._data_type = data_type
+        self._unit = unit
         self._rows = rows
         self._keys = row_names
 
@@ -58,6 +60,7 @@ class Column(MappedSequence):
             '_index': self._index,
             '_name': self._name,
             '_data_type': self._data_type,
+            '_unit': self._unit,
             '_rows': self._rows,
             '_keys': self._keys
         }
@@ -71,6 +74,7 @@ class Column(MappedSequence):
         self._index = data['_index']
         self._name = data['_name']
         self._data_type = data['_data_type']
+        self._unit = data.get('_unit')
         self._rows = data['_rows']
         self._keys = data['_keys']
 
@@ -94,6 +98,28 @@ class Column(MappedSequence):
         This column's data type.
         """
         return self._data_type
+
+    @property
+    def unit(self):
+        """
+        This column's :class:`.Unit`, or :code:`None` if the column has no
+        unit metadata.
+        """
+        return self._unit
+
+    def convert(self, target_unit):
+        """
+        Convert this column's values to another :class:`.Unit` and return
+        them as a tuple.
+
+        The column itself is not modified. To convert a column in place of a
+        new table, use :meth:`.Table.convert`.
+        """
+        if self._unit is None:
+            raise UnitError('Column "%s" has no unit to convert from.' % self._name)
+
+        return tuple(self._unit.convert(value, target_unit) if value is not None else None
+                     for value in self.values())
 
     @memoize
     def values(self):

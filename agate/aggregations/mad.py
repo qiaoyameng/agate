@@ -3,6 +3,7 @@ from agate.aggregations.has_nulls import HasNulls
 from agate.aggregations.median import Median
 from agate.data_types import Number
 from agate.exceptions import DataTypeError
+from agate.units import reference_unit
 from agate.utils import median
 from agate.warns import warn_null_calculation
 
@@ -22,6 +23,14 @@ class MAD(Aggregation):
     def get_aggregate_data_type(self, table):
         return Number()
 
+    def get_aggregate_unit(self, table):
+        column = table.columns[self._column_name]
+
+        if column.unit is not None:
+            return reference_unit(column.unit.delta_unit())
+
+        return None
+
     def validate(self, table):
         column = table.columns[self._column_name]
 
@@ -38,5 +47,10 @@ class MAD(Aggregation):
 
         data = column.values_without_nulls_sorted()
         if data:
-            m = self._median.run(table)
+            if column.unit is not None:
+                data = tuple(column.unit.to_reference(n) for n in data)
+                m = median(data)
+            else:
+                m = self._median.run(table)
+
             return median(sorted(abs(n - m) for n in data))

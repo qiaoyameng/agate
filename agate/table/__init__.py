@@ -24,11 +24,12 @@ from itertools import chain
 
 from agate import utils
 from agate.columns import Column
-from agate.data_types import DataType
+from agate.data_types import DataType, Number
 from agate.exceptions import CastError
 from agate.mapped_sequence import MappedSequence
 from agate.rows import Row
 from agate.type_tester import TypeTester
+from agate.units import Unit, get_unit
 
 
 class Table:
@@ -57,6 +58,11 @@ class Table:
         :class:`.TypeTester` or `None` in which case a generic TypeTester will
         be used. Alternatively, a dictionary with column names as keys and
         instances of :class:`.DataType` as values to specify some types.
+    :param column_units:
+        An optional sequence of :class:`.Unit` instances, one per column, or
+        a dictionary mapping column names to :class:`.Unit` instances. Columns
+        without a unit use :code:`None`. Units may only be attached to
+        :class:`.Number` columns.
     :param row_names:
         Specifies unique names for each row. This parameter is
         optional. If specified it may be 1) the name of a single column that
@@ -70,7 +76,8 @@ class Table:
         is propagated from an existing table. When :code:`True`, rows are
         assumed to be :class:`.Row` instances, rather than raw data.
     """
-    def __init__(self, rows, column_names=None, column_types=None, row_names=None, _is_fork=False):
+    def __init__(self, rows, column_names=None, column_types=None, row_names=None, _is_fork=False,
+                 column_units=None):
         if isinstance(rows, str):
             raise ValueError('When created directly, the first argument to Table must be a sequence of rows. '
                              'Did you want agate.Table.from_csv?')
@@ -115,6 +122,34 @@ class Table:
 
         if len_column_names != len(self._column_types):
             raise ValueError('column_names and column_types must be the same length.')
+
+        # Validate column units
+        if column_units is None:
+            self._column_units = tuple(None for _ in range(len_column_names))
+        elif isinstance(column_units, dict):
+            for unit in column_units.values():
+                if not isinstance(unit, Unit):
+                    raise ValueError('Column units must be instances of Unit.')
+
+            self._column_units = tuple(get_unit(column_units.get(name)) for name in self._column_names)
+        else:
+            column_units = tuple(column_units)
+
+            if len(column_units) != len_column_names:
+                raise ValueError('column_names and column_units must be the same length.')
+
+            for unit in column_units:
+                if unit is not None and not isinstance(unit, Unit):
+                    raise ValueError('Column units must be instances of Unit or None.')
+
+            self._column_units = column_units
+
+        for i, unit in enumerate(self._column_units):
+            if unit is not None and not isinstance(self._column_types[i], Number):
+                raise ValueError(
+                    'Unit "%s" can only be attached to a Number column, but column "%s" is %s.'
+                    % (unit.name, self._column_names[i], type(self._column_types[i]).__name__)
+                )
 
         if not _is_fork:
             new_rows = []
@@ -173,8 +208,9 @@ class Table:
         for i in range(len_column_names):
             name = self._column_names[i]
             data_type = self._column_types[i]
+            unit = self._column_units[i]
 
-            column = Column(i, name, data_type, self._rows, row_names=self._row_names)
+            column = Column(i, name, data_type, self._rows, row_names=self._row_names, unit=unit)
 
             new_columns.append(column)
 
@@ -216,6 +252,14 @@ class Table:
         return self._column_types
 
     @property
+    def column_units(self):
+        """
+        A tuple of :class:`.Unit` instances (or :code:`None`) matching
+        :attr:`.Table.column_names`.
+        """
+        return self._column_units
+
+    @property
     def column_names(self):
         """
         An tuple of strings.
@@ -247,7 +291,7 @@ class Table:
         """
         return self._rows
 
-    def _fork(self, rows, column_names=None, column_types=None, row_names=None):
+    def _fork(self, rows, column_names=None, column_types=None, row_names=None, column_units=None):
         """
         Create a new table using the metadata from this one.
 
@@ -265,17 +309,31 @@ class Table:
         :param row_names:
             Row names for the forked table. If not specified, fork will use
             this table's row names.
+        :param column_units:
+            Units for the forked table. If not specified, fork will use this
+            table's units, including when columns are reordered or dropped by
+            name.
         """
         if column_names is None:
             column_names = self._column_names
 
         if column_types is None:
-            column_types = self._column_types
+            column_types = tuple(
+                self._column_types[self._column_names.index(name)] if name in self._column_names else None
+                for name in column_names
+            )
 
         if row_names is None:
             row_names = self._row_names
 
-        return Table(rows, column_names, column_types, row_names=row_names, _is_fork=True)
+        if column_units is None:
+            column_units = tuple(
+                self._column_units[self._column_names.index(name)] if name in self._column_names else None
+                for name in column_names
+            )
+
+        return Table(rows, column_names, column_types, row_names=row_names, _is_fork=True,
+                     column_units=column_units)
 
     def print_csv(self, **kwargs):
         """
@@ -304,6 +362,7 @@ from agate.table.bar_chart import bar_chart
 from agate.table.bins import bins
 from agate.table.column_chart import column_chart
 from agate.table.compute import compute
+from agate.table.convert import convert
 from agate.table.denormalize import denormalize
 from agate.table.distinct import distinct
 from agate.table.exclude import exclude
@@ -337,6 +396,7 @@ Table.bar_chart = bar_chart
 Table.bins = bins
 Table.column_chart = column_chart
 Table.compute = compute
+Table.convert = convert
 Table.denormalize = denormalize
 Table.distinct = distinct
 Table.exclude = exclude
