@@ -73,11 +73,13 @@ Advanced processing
 
     agate.Table.bins
     agate.Table.denormalize
+    agate.Table.denormalize_with_spec
     agate.Table.group_by
     agate.Table.homogenize
     agate.Table.join
     agate.Table.merge
     agate.Table.normalize
+    agate.Table.normalize_with_spec
     agate.Table.pivot
     agate.Table.rename
 

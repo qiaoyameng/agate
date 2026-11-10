@@ -26,6 +26,44 @@ class CastError(Exception):  # pragma: no cover
     pass
 
 
+class ReshapeConflictError(Exception):
+    """
+    A :meth:`.Table.denormalize_with_spec` operation found more than one value
+    for the same (original row, original column) position.
+
+    The conflicting positions are available as a list of
+    :code:`(row_position, column_name)` tuples via :attr:`conflicts`.
+    """
+    def __init__(self, conflicts):
+        self.conflicts = list(conflicts)
+        super().__init__(
+            'Found conflicting values for these (row, column) positions: %r. '
+            'Use the on_conflict argument to resolve them.' % (self.conflicts,)
+        )
+
+
+class ReshapeMissingError(Exception):
+    """
+    A :meth:`.Table.denormalize_with_spec` operation could not find values for
+    every (original row, original column) position described by the structure
+    description.
+
+    Missing positions (no record in the long table) are reported separately
+    from explicit null values via :attr:`missing_positions` and
+    :attr:`null_positions`. Both are lists of :code:`(row_position,
+    column_name)` tuples.
+    """
+    def __init__(self, missing_positions, null_positions):
+        self.missing_positions = list(missing_positions)
+        self.null_positions = list(null_positions)
+        super().__init__(
+            'Missing values for these (row, column) positions: %r. '
+            'Explicit null values found at: %r. '
+            'Pass fill_missing to denormalize_with_spec to fill the missing positions.'
+            % (self.missing_positions, self.null_positions)
+        )
+
+
 class FieldSizeLimitError(Exception):  # pragma: no cover
     """
     A field in a CSV file exceeds the maximum length.
